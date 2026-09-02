@@ -1,0 +1,12 @@
+# Замените адреса ниже на реальные. Все страницы сайта используют эти значения.
+social:
+  telegram_channel: "https://t.me/ebm_base"
+  telegram_personal: "https://t.me/Nik_Burlov"
+  instagram: "https://instagram.com/ebm_base"
+  journal_telegram: "https://t.me/jc_ebm_base"
+  journal_vk: "https://vk.com/jcmma"
+  youtube: "https://youtube.com/@journalclubebm_base2526"
+
+# Создайте бесплатную форму на https://formspree.io/ и вставьте endpoint вида:
+# https://formspree.io/f/xxxxxxxx
+form_endpoint: "https://formspree.io/f/mnpqvdjk"

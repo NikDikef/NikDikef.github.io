@@ -1,0 +1,27 @@
+---
+#title: "Блог"
+#description: "Материалы по биостатистике, causal inference и методологии исследований"
+page-layout: full
+toc: true
+toc-title: "Годы"
+toc-location: right
+date-format: "DD.MM.YYYY"
+listing:
+  - id: posts-2026
+    contents:
+      - "posts/2026*/*.qmd"
+      - "!outputs/**"
+    type: custom
+    template: templates/blog-listing.ejs
+    sort: "date desc"
+    filter-ui: false
+    categories: true
+    feed: true
+---
+
+<p class="lead page-intro">Разборы исследований, методологии клинических исследований, статистических методов, подхода causal inference и других тем, которые мне интересны.</p>
+
+## 2026
+
+::: {#posts-2026}
+:::

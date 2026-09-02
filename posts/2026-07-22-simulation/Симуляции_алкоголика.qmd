@@ -1,0 +1,895 @@
+---
+title: "Симуляции"
+
+description: "Ну так все входные параметры на слайдах - берите их и подставляйте в симуляцию"
+
+author:
+  - name: "Никита Бурлов"
+    url: "https://t.me/ebm_base"
+
+date: 2026-07-22
+date-format: "DD.MM.YYYY"
+
+categories:
+  - биостатистика
+  - методология
+  - R
+  - симуляции
+  - простые тесты
+  - t-test
+  - Mann-Whitney test
+
+image: cover.png
+
+format:
+  html:
+    html-math-method: katex
+    link-external-newwindow: true
+    smooth-scroll: true
+    code-fold: true
+    code-overflow: wrap
+    code-block-bg: true
+    code-block-border-left: "#1F77B4"
+    code-copy: hover
+    toc: true
+    toc-title: "Оглавление"
+    number-sections: false
+    fig-align: center
+
+execute:
+  freeze: true
+  cache: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+
+editor_options:
+  chunk_output_type: console
+---
+
+## Введение
+
+В три девятом царстве в три десятом государстве автор одного канала сказал, что надо использовать универсальный метод для сравнения групп по количественной переменной. Думаете, он имел в виду модели? Какой-то сложный подход? Нет, он говорил про **тест Манна-Уитни**.
+
+В некоторых руководствах можно встретить рекомендации применять непараметрические методы в ситуациях, когда данные имеют ненормальное распределение, и даже использовать 2/3-этапную процедуру (соответствует ли выборочное распределение нормальному и равенство дисперсий) \[[1](https://cyberleninka.ru/article/n/trebovaniya-i-rekomendatsii-po-opisaniyu-i-ispolzovaniyu-statisticheskogo-analiza-v-issledovaniyah/viewer), [2](https://www.probl-endojournals.ru/jour/article/view/11146/8060)\]. Описывать, почему это не очень соответствует действительности, я не буду. Рекомендую посмотреть на эту тему видео из [разрушителей статистических мифов от Института Биоинформатики](https://bioinf.me/stat_myths#videos) (конкретно про [проверку на нормальность](https://kinescope.io/syhhGzB4nT1xrTTJxdgWsX)).
+
+Однако вышеупомянутый автор, после получения обратной связи, решил подтвердить свои слова с помощью симуляций. Должен сказать, что это вызывает уважение. Но у симуляций есть ограничения (о которых автор умолчал). Я же попросил у него поделиться кодом, но получил ответ *"Ну так все входные параметры на слайдах - берите их и подставляйте в симуляцию"*. И я решил повторить. Посмотрим, что вышло у меня.
+
+## Настройки
+
+Перед каждым блоком будет **секция с кодом** на языке программирования R (code), чтобы при желании вы тоже могли повторить или покритиковать, обнаружив ошибку.
+
+Для начала настроим симуляцию. Загружаем необходимые пакеты, создаем функцию для стандартной таблицы. Затем создаем функции для каждого сценария генерации данных (всего их 4). Задаем количество итераций/повторений (**10000**) и размер выборки для 1 группы (**n = 30**). Seed на каждом этапе установлен **42**.
+
+```{r}
+#| label: setup
+
+library(tidyverse)
+library(rstatix)
+library(brunnermunzel)
+library(flextable)
+library(scales)
+
+tab_tib <- function(tib) {
+  flextable(tib) |>
+    theme_box() |>
+    autofit() |>
+    fit_to_width(8) |>
+    font(fontname = "Times New Roman", part = "all") |>
+    fontsize(size = 12, part = "all")
+}
+
+gen_ideal <- function(delta, n) {
+  tibble(group1 = rnorm(n, 0, 1), group2 = rnorm(n, mean = 0 + delta, 1)) |>
+    pivot_longer(1:2)
+}
+
+gen_two_outliers <- function(delta, n) {
+  tibble(
+    group1 = c(rnorm(n - 2, 0, 1), runif(2, -6, 6)),
+    group2 = c(rnorm(n - 2, 0 + delta, 1), runif(2, -6, 6))
+  ) |>
+    pivot_longer(1:2)
+}
+
+gen_extreme_control <- function(delta, n) {
+  tibble(group1 = c(rnorm(n - 1, 0, 1), 6), group2 = rnorm(n, 0 + delta, 1)) |>
+    pivot_longer(1:2)
+}
+
+gen_shift_10pct <- function(delta, n) {
+  tibble(
+    group1 = c(rnorm(n - round(0.1 * n), 0, 1), rnorm(round(0.1 * n), 2, 1)),
+    group2 = rnorm(n, 0 + delta, 1)
+  ) |>
+    pivot_longer(1:2)
+}
+
+scenarios <- list(
+  gen_ideal,
+  gen_two_outliers,
+  gen_extreme_control,
+  gen_shift_10pct
+)
+
+B <- 10000
+
+n <- 30
+```
+
+Что будет происходить дальше?
+Я каждый раз буду описывать сценарий (заданные условия, разность). И (почти) везде будет одинаковый алгоритм оценки.
+
+Запускается симуляция методом Монте-Карло:\
+1. Генерируются случайные данные из генеральной совокупности по выбранному сценарию;\
+2. Проводится t-тест Уэлча, сохраняется его значение p-value;\
+3. Проводится тест Манна-Уитни, сохраняется его значение p-value;\
+4. Проводится 3-этапная процедура (тест Шапиро-Уилка, тест Левена) для выбора критерия (**t-тест Стьюдента** при нормальном распределении и равенстве дисперсий, **t-тест Уэлча** при нормальном распределении и неравенстве дисперсий, **тест Манна-Уитни** при ненормальном распределении), сохраняется значение p-value;\
+5. Шаги из п. 1-4 повторяются 10000 раз, все результаты сохраняются в таблицу;\
+6. После сбора всех данных при отсутствии различий рассчитывается относительная частота ложноположительных результатов ($\alpha$ -- вероятность ошибки I рода). При наличии различий -- относительная частота истинноположительных результатов (мощность -- $1 - \beta$);\
+7. Сравниваем в лоб, думаем, интерпретируем.
+
+В целом ничего необычного. Но интересное будет дальше.
+
+## 1 сценарий ("идеальные" данные)
+
+Название сценариев придумывал автор симуляций, а не я.
+Обе группы (по n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$). Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$).
+
+```{r}
+#| label: alpha_ideal
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[1]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+alpha_ideal <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Затем снова эти же две группы (по n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$). Размер эффекта (или как указывает автор, d Коэна) 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$).
+
+```{r}
+#| label: power_ideal
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0.8
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[1]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+power_ideal <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_ideal
+
+alpha_ideal |>
+  left_join(power_ideal) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+Как видим, любой из подходов дает достаточный контроль над ошибкой I и II рода (на стандартном уровне).
+
+## 2 сценарий (2 выброса)
+
+Обе группы (по n = 28) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$). Но в каждую группу вмешивается по 2 выброса из равномерного распределения с минимумом -6 и максимум 6 ($\mathcal{U} (-6, 6)$). Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$). Правда я сомневаюсь, что в такой ситуации генерируется верная нулевая гипотеза $H0$ (но представим, что выбросы - это опечатки).
+
+```{r}
+#| label: alpha_2_out
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[2]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+alpha_2_out <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Затем снова две группы (по n = 28) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$), и в каждую группу вмешивается по 2 выброса из равномерного распределения с минимумом -6 и максимум 6 ($\mathcal{U} (-6, 6)$). Размер эффекта 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$). Но я снова сомневаюсь по поводу $H0$.
+
+```{r}
+#| label: power_2_out
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0.8
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[2]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+power_2_out <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_2_out
+
+alpha_2_out |>
+  left_join(power_2_out) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+В такой ситуации все тесты хорошо контролируют ошибку I рода, а вот мощность самая низкая у t-теста Уэлча. МУ-тест и алгоритм выбора на основе предположений дают примерно одинаковый результат. Подозреваю, что результат t-теста связан с размером выборки.
+
+## 3 сценарий (1 экстремальный в контроле)
+
+Обе группы (контроль n = 29 и эксперимент n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$). Но в контрольную группу вмешивается 1 экстремальное значение равное 6 ($+6\sigma$). Похоже на ситуацию, когда при сборе данных опечатались (очень сильно опечатались). Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$). 
+
+```{r}
+#| label: alpha_extremal
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[3]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+alpha_extremal <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Опять две группы (контроль n = 29 и эксперимент n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$), и в контрольную группу вмешивается 1 экстремальное значение равное 6 ($+6\sigma$). Размер эффекта 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$). 
+
+```{r}
+#| label: power_extremal
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0.8
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[3]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+power_extremal <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_extremal
+
+alpha_extremal |>
+  left_join(power_extremal) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+Тесты в очередной раз хорошо контролируют ошибку I рода. А вот мощность снова проседает у t-теста Уэлча, что неудивительно. Такой экстремальный выброс на наборе из n = 30 явно смещает среднее. МУ и алгоритм снова показывают схожие значения.
+
+## 4 сценарий (10% "тяжелых" в контроле)
+
+Обе группы (контроль n = 27 и эксперимент n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$). Но в контрольную группу вмешивается 10% (это 3 значения в данном случае) "тяжелых" значения из нормального распределения со средним 2 и стандартным отклонением 1 ($\mathcal{N} (2, 1)$). Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$). Если эти 10% мы не считаем выбросами, а реальными значениями, то нулевая гипотеза $H0$ неверна изначально (в группе контроля уже есть эффект). Поэтому на мой взгляд, это очень странный сценарий.
+
+```{r}
+#| label: alpha_10_prct
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[4]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+alpha_10_prct <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Опять две группы (контроль n = 27 и эксперимент n = 30) генерируются из нормального распределения со средним 0 и стандартным отклонением 1 ($\mathcal{N} (0, 1)$), и в контрольную группу вмешивается 10% (это 3 значения в данном случае) "тяжелых" значения из нормального распределения со средним 2 и стандартным отклонением 1 ($\mathcal{N} (2, 1)$). Размер эффекта 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$). Повторим, что если эти 10% мы не считаем выбросами, а реальными значениями, то в данной ситуации нулевая гипотеза $H0$ себя ведет, на мой взгляд, непредсказуемо (в группе контроля уже есть эффект, и в группе эксперимента тоже, но мы перестаем контролировать величину). Мнение остается прежним, это очень странный сценарий. Хотя его можно было дополнить и посмотреть на средний эффект.
+
+```{r}
+#| label: power_10_prct
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Алгоритм` = numeric(B)
+)
+delta <- 0.8
+
+set.seed(42)
+for (i in 1:B) {
+  df <- scenarios[[4]](delta, n)
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = F
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = F)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = T)$p.value
+    )
+  )
+}
+
+power_10_prct <- Results |>
+  pivot_longer(1:3) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_10_prct
+
+alpha_10_prct |>
+  left_join(power_10_prct) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+Неудивительно, что в таком сценарии мы не видим контроля ошибок I и II рода. При этом я бы не сказал, что тесты между собой критично различаются.
+
+## 5 сценарий (случайный сценарий 1-4)
+
+Теперь случайным образом равновероятно выбирается один из 4-х сценариев, указанных выше. Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$).
+Учитывая, что 4 сценарий странный, то я ожидаю увидеть смещенные результаты. Но возможно из-за преобладания по количеству 3-х удовлетворительных сценариев оно не будет слишком сильным. В дополнение к этому сценарию я еще внес расчет теста Бруннера-Мюнцеля (почитать про него можно [здесь](https://t.me/medstatistic_ru/292) и [здесь](https://t.me/medstatistic_ru/293)). Будет интересно посмотреть.
+
+```{r}
+#| label: alpha_random
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Бруннера-Мюнцеля тест` = numeric(B),
+  `Алгоритм` = numeric(B),
+  scenario = numeric(B)
+)
+delta <- 0
+
+set.seed(42)
+for (i in 1:B) {
+  k <- sample(length(scenarios), 1)
+  df <- scenarios[[k]](delta, n)
+  Results$scenario[i] <- k
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = FALSE
+  )$p.value
+  Results$`Бруннера-Мюнцеля тест`[i] <- brunnermunzel.test(
+    value ~ name,
+    df
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = FALSE)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = TRUE)$p.value
+    )
+  )
+}
+
+alpha_random <- Results |>
+  pivot_longer(1:4) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Теперь случайным образом равновероятно выбирается один из 4-х сценариев, указанных выше. Размер эффекта 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$). Продолжаю возмущаться по поводу 4 сценария (но что поделать). И здесь тоже посмотрим тест Бруннера-Мюнцеля
+
+```{r}
+#| label: power_random
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Бруннера-Мюнцеля тест` = numeric(B),
+  `Алгоритм` = numeric(B),
+  scenario = numeric(B)
+)
+delta <- 0.8
+
+set.seed(42)
+for (i in 1:B) {
+  k <- sample(length(scenarios), 1)
+  df <- scenarios[[k]](delta, n)
+  Results$scenario[i] <- k
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = FALSE
+  )$p.value
+  Results$`Бруннера-Мюнцеля тест`[i] <- brunnermunzel.test(
+    value ~ name,
+    df
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = FALSE)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = TRUE)$p.value
+    )
+  )
+}
+
+power_random <- Results |>
+  pivot_longer(1:4) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_random
+
+alpha_random |>
+  left_join(power_random) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+Забавные результаты. При любом развитии событий в среднем все подходы демонстрируют схожий контроль ошибок I рода. По мощности тоже, кроме t-теста Уэлча (это ожидаемо).
+
+Но у меня возникло предположение. А возможно ли, что это недостаток размера выборки? Поэтому я увеличил каждую группу до 100 (а там, где 10% -- это 10 значений). И прогнал их по 5 сценарию.
+
+## 5 сценарий (случайный сценарий 1-4 при n = 100)
+
+Размер эффекта 0 (т.е. $H0: \mu_2 - \mu_1 = 0$).
+
+```{r}
+#| label: alpha_random_100
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Бруннера-Мюнцеля тест` = numeric(B),
+  `Алгоритм` = numeric(B),
+  scenario = numeric(B)
+)
+delta <- 0
+n <- 100
+
+set.seed(42)
+for (i in 1:B) {
+  k <- sample(length(scenarios), 1)
+  df <- scenarios[[k]](delta, n)
+  Results$scenario[i] <- k
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = FALSE
+  )$p.value
+  Results$`Бруннера-Мюнцеля тест`[i] <- brunnermunzel.test(
+    value ~ name,
+    df
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = FALSE)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = TRUE)$p.value
+    )
+  )
+}
+
+alpha_random_100 <- Results |>
+  pivot_longer(1:4) |>
+  summarise(Alpha = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Размер эффекта 0.8 (т.е. $H0: \mu_2 - \mu_1 = 0.8$).
+
+```{r}
+#| label: power_random_100
+
+Results <- tibble(
+  `t-тест Уэлча` = numeric(B),
+  `Манна-Уитни тест` = numeric(B),
+  `Бруннера-Мюнцеля тест` = numeric(B),
+  `Алгоритм` = numeric(B),
+  scenario = numeric(B)
+)
+delta <- 0.8
+n <- 100
+
+set.seed(42)
+for (i in 1:B) {
+  k <- sample(length(scenarios), 1)
+  df <- scenarios[[k]](delta, n)
+  Results$scenario[i] <- k
+
+  Results$`t-тест Уэлча`[i] <- t.test(value ~ name, df)$p.value
+  Results$`Манна-Уитни тест`[i] <- wilcox.test(
+    value ~ name,
+    df,
+    correct = FALSE
+  )$p.value
+  Results$`Бруннера-Мюнцеля тест`[i] <- brunnermunzel.test(
+    value ~ name,
+    df
+  )$p.value
+
+  shap <- shapiro.test(df$value)$p.value
+  lev <- df |>
+    mutate(name = factor(name)) |>
+    levene_test(value ~ name) |>
+    pull(p)
+
+  Results$`Алгоритм`[i] <- ifelse(
+    shap < 0.05,
+    wilcox.test(value ~ name, df, correct = FALSE)$p.value,
+    ifelse(
+      lev < 0.05,
+      t.test(value ~ name, df)$p.value,
+      t.test(value ~ name, df, var.equal = TRUE)$p.value
+    )
+  )
+}
+
+power_random_100 <- Results |>
+  pivot_longer(1:4) |>
+  summarise(Power = percent(mean(value < 0.05), accuracy = 0.1), .by = name) |>
+  rename(Тест = name)
+```
+
+Получаем результаты.
+
+```{r}
+#| label: tab_random_100
+
+alpha_random_100 |>
+  left_join(power_random_100) |>
+  tab_tib() |>
+  align(j = 2:3, align = "center", part = "all")
+```
+
+Интересно. Вот и **ответ на вопрос о мощности** (думаю, его можно снимать). Но контроль за ошибкой I рода ослабевает (скорее всего за счет сценариев с выбросами и с 10% "тяжелыми").
+
+## Графически
+
+Думал как лучше это показать на графике, но мне кажется, что таблицы проще и понятнее сразу.
+
+```{r}
+#| label: plot-1
+#| fig-width: 7
+#| fig-height: 8
+#| fig-dpi: 300
+#| out-width: "70%"
+#| fig-align: "center"
+
+df_plot <- rbind(
+  left_join(alpha_ideal, power_ideal),
+  left_join(alpha_2_out, power_2_out),
+  left_join(alpha_extremal, power_extremal),
+  left_join(alpha_10_prct, power_10_prct),
+  left_join(alpha_random[-3, ], power_random[-3, ])
+) |>
+  mutate(Сценарий = c(rep(1:5, each = 3))) |>
+  pivot_longer(cols = 2:3) |>
+  mutate(value = as.numeric(str_remove(value, "%")))
+
+df_plot |>
+  mutate(
+    Тест = factor(
+      Тест,
+      levels = c("t-тест Уэлча", "Манна-Уитни тест", "Алгоритм")
+    )
+  ) |>
+  ggplot(aes(x = Сценарий, y = value, fill = Тест)) +
+  geom_col(show.legend = F, position = "stack") +
+  geom_label(
+    aes(label = value),
+    fill = "white",
+    show.legend = F,
+    size = 4.5,
+    position = position_dodge(0.9),
+    vjust = -0.2
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(y = "Значение, %") +
+  facet_grid(Тест ~ name) +
+  ggsci::scale_fill_jama(alpha = 0.9) +
+  theme_bw(base_size = 14) +
+  theme(
+    strip.background = element_rect(fill = "grey90"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(colour = "grey95")
+  )
+```
+
+## Размышления
+
+Чем данные симуляции **примечательны**? 
+Они позволили посмотреть, какие результаты дает "алгоритмичный" подход. Но алгоритм лишь один из методов? И да и нет. Радикальное следование только t-тесту или МУ-тесту -- это **тоже алгоритм**.
+Под словом алгоритм я подразумеваю необдуманные действия, механические, рутинные (называйте как хотите, мне нравится термин "*обезьянья работа*", который как-то озвучил мой друг). 
+
+Но эти симуляции очень сильно **ограничены**.\
+1. В них создаются достаточно простые ситуации, словно это РКИ. Тут нет моделирования вмешивающихся факторов, хотя в ситуации 4 они явно нужны;\
+2. Заранее не задаются гипотезы, которые будут тестироваться. Моделируется лишь нулевая гипотеза о средних значениях. А для теста МУ остается неизвестной (мы лишь можем ее предположить);\
+3. Нет точного пояснения чем являются выбросы. Это ошибки/опечатки? Это реалистичные, но редкие значения? От этой информации зависит, что с ними дальше нужно сделать;\
+4. Малый размер выборки. Этот пункт в какой-то мере субъективный, но, я считаю, что по 30 значений в каждой группе -- это мало;\
+5. Размер эффекта. Если его начать менять в большую или меньшую сторону, то мы получим разные значения мощности. Более логично было бы делать симуляцию анализа мощности с разным размером эффекта.
+
+
+Какой подход я считаю наиболее **оправданным**?\
+1. Определение исследовательского вопроса -- это основа основ, которая определяет множество дальнейших шагов;\
+2. Обязательное проведение разведывательного анализа (exploratory data analysis -- **EDA**), чтобы выявить ошибки, выбросы, после чего разобраться в причинах их появлений;\
+3. Формулирование **нулевой гипотезы** на основе исследовательского вопроса, которую будем проверять (если мы рассматриваем тестирование гипотез);\
+4. Выдвинуть предположение о механизме генерации данных или причинно-следственных ассоциациях на основе исследовательского вопроса (например, построить направленный ациклический граф -- **DAG**), чтобы принимать решение о необходимости коррекций;\
+5. Делать выбор в пользу **моделей**, а не простых тестов (с учетом особенностей их применения).
+
+
+```{r}
+#| echo: false
+
+sessioninfo::session_info(pkgs = "attached", include_base = F)
+```
+
+

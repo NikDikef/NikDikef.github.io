@@ -1,0 +1,36 @@
+```{=html}
+<div class="list blog-list">
+  <% for (const post of items) { %>
+  <article class="blog-entry" <%= metadataAttrs(post) %>>
+    <div class="blog-entry-date listing-date"><%= post.date %></div>
+
+    <div class="blog-entry-body">
+      <h3 class="blog-entry-title listing-title">
+        <a href="<%- post.path %>"><%= post.title %></a>
+      </h3>
+
+      <% if (post.categories) { %>
+      <div class="blog-entry-categories listing-categories">
+        <% for (const category of post.categories) { %>
+        <button class="blog-entry-category listing-category" type="button"
+          onclick="window.quartoListingCategory('<%= category %>'); return false;">
+          <%= category %>
+        </button>
+        <% } %>
+      </div>
+      <% } %>
+
+      <% if (post.description) { %>
+      <p class="blog-entry-description listing-description"><%= post.description %></p>
+      <% } %>
+    </div>
+
+    <% if (post.image) { %>
+    <a class="blog-entry-thumbnail" href="<%- post.path %>" tabindex="-1" aria-hidden="true">
+      <img src="<%= post.image %>" alt="" loading="lazy">
+    </a>
+    <% } %>
+  </article>
+  <% } %>
+</div>
+```

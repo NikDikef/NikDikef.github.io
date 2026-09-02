@@ -1,0 +1,56 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "posts/**/*.qmd"
+    - "!templates/"
+    - "!outputs/**"
+
+lang: ru
+
+website:
+  #title: "Никита Бурлов"
+  #description: "Биостатистика, методология медицинских исследований и журнальный клуб"
+  site-url: "https://Ebm_base.github.io/"
+  favicon: assets/stack.png
+  open-graph: true
+  twitter-card: true
+  search:
+    location: navbar
+    type: overlay
+  navbar:
+    pinned: true
+    #background: light
+    left:
+      - text: "Обо мне"
+        href: index.qmd
+      - text: "Блог"
+        href: blog.qmd
+      - text: "Публикации"
+        href: publications.qmd
+      - text: "Журнальный клуб"
+        href: journal-club.qmd
+      - text: "Услуги"
+        href: services.qmd
+      - text: "Контакты"
+        href: contacts.qmd
+  page-footer:
+    left: "© Никита Бурлов (Ebm_base)"
+    right:
+      - text: "Контакты"
+        href: contacts.qmd
+
+format:
+  html:
+    theme: darkly
+    css: styles.css
+    toc: true
+    toc-title: "На этой странице"
+    smooth-scroll: true
+    link-external-newwindow: true
+    code-copy: true
+    anchor-sections: true
+
+execute:
+  freeze: auto

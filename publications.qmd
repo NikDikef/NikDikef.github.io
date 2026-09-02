@@ -1,0 +1,124 @@
+---
+#title: "Научный публикации"
+#description: "Научные публикации Никиты Бурлова"
+toc: false
+---
+
+::: {.callout-note title="Об авторстве в коллективных исследованиях"}
+В публикациях крупных международных коллабораций персональный список участников может находиться в приложении или в разделе collaborators на странице статьи.
+:::
+
+## 2026
+
+::: {.publication}
+1. **Burlov N. N.**, Baranovskii M. Y., Burlova E. A., Slavenko M. G., Khrykov G. N. Prospective study on the organization and efficiency of online journal club [препринт]. 2026. [https://doi.org/10.64898/2026.08.11.26360192](https://doi.org/10.64898/2026.08.11.26360192)
+:::
+
+::: {.publication}
+2. Nepogodiev D., Kamarajah S. K., Bhangu A., et al. 30-day postoperative mortality and the effects of hospital preparedness during the COVID-19 pandemic: a pooled analysis of prospective international cohort studies. *The Lancet Regional Health - Europe*. 2026;62:101566. [https://doi.org/10.1016/j.lanepe.2025.101566](https://doi.org/10.1016/j.lanepe.2025.101566)
+:::
+
+## 2025
+
+::: {.publication}
+1. **Burlov N. N.** Comment on ‘A phase III randomized trial evaluating the quality of life impact of a tailored versus systematic use of defunctioning ileostomy following total mesorectal excision for rectal cancer - GRECCAR 17 trial protocol’. *Colorectal Disease*. 2025;27(11):e70300. [https://doi.org/10.1111/codi.70300](https://doi.org/10.1111/codi.70300)
+:::
+
+::: {.publication}
+2. Shapkina V., Shindyapin V., **Burlov N.**, Prosekina E., Artemyeva A. Vasculogenic mimicry in non-small cell lung cancer: a systematic review. *Frontiers in Oncology*. 2025;15:1481726. [https://doi.org/10.3389/fonc.2025.1481726](https://doi.org/10.3389/fonc.2025.1481726)
+:::
+
+## 2024
+
+::: {.publication}
+1. NIHR Global Health Research Unit on Global Surgery; STARSurg Collaborative. A prognostic model for use before elective surgery to estimate the risk of postoperative pulmonary complications (GSU-Pulmonary Score): a development and validation study in three international cohorts. *The Lancet Digital Health*. 2024;6(7):e507-e519. [https://doi.org/10.1016/S2589-7500(24)00065-7](https://doi.org/10.1016/S2589-7500(24)00065-7)
+:::
+
+::: {.publication}
+2. Счастливцев И. В., Лобастов К. В., Цаплин С. Н., **Бурлов Н. Н.**, Кузнецов М. С., Журавлев С. В., Родоман Г. В. Положительная предсказательная способность шкалы Wells в диагностике тромбоза глубоких вен нижних конечностей: результаты байесовского анализа. *Флебология*. 2024;18(4):274-282. [https://doi.org/10.17116/flebo202418041274](https://doi.org/10.17116/flebo202418041274)
+:::
+
+::: {.publication}
+3. ESCP EAGLE Safe Anastomosis Collaborative; NIHR Global Health Research Unit in Surgery. Evaluation of a quality improvement intervention to reduce anastomotic leak following right colectomy (EAGLE): pragmatic, batched stepped-wedge, cluster-randomized trial in 64 countries. *British Journal of Surgery*. 2024;111(1):znad370. [https://doi.org/10.1093/bjs/znad370](https://doi.org/10.1093/bjs/znad370)
+:::
+
+## 2023
+
+::: {.publication}
+1. Zaborowski A. M., et al.; REACCT Collaborative. Colorectal Cancer in the Young: Research in Early Age Colorectal Cancer Trends (REACCT) Collaborative. *Cancers*. 2023;15(11):2979. [https://doi.org/10.3390/cancers15112979](https://doi.org/10.3390/cancers15112979)
+:::
+
+::: {.publication}
+2. National Institute for Health and Care Research Global Health Research Unit on Global Surgery. Reducing the environmental impact of surgery on a global scale: systematic review and co-prioritization with healthcare workers in 132 countries. *British Journal of Surgery*. 2023;110(7):804-817. [https://doi.org/10.1093/bjs/znad092](https://doi.org/10.1093/bjs/znad092)
+:::
+
+## 2022
+
+::: {.publication}
+1. Kotselyabina P. V., Kovalik V. V., Markelov V. V., **Burlov N. N.**, Lepik K. V., Mikhailova N. B., Kalashnikova O. B., Tsvetkov N. Y., Yurovskaya K. S., Gindina T. L., Moiseev I. S., Kulagin A. D., Morozova E. V. Comparison of prognosis between patients with therapy-related myelodysplastic syndrome after hematological malignancies and myelodysplastic syndrome de novo: retrospective cohort study. *Cellular Therapy and Transplantation*. 2022;11(3). [https://doi.org/10.18620/ctt-1866-8836-2022-11-3-1-132](https://doi.org/10.18620/ctt-1866-8836-2022-11-3-1-132)
+:::
+
+::: {.publication}
+2. NIHR Global Health Research Unit on Global Surgery. Elective surgery system strengthening: development, measurement, and validation of the surgical preparedness index across 1632 hospitals in 119 countries. *The Lancet*. 2022;400(10363):1607-1617. [https://doi.org/10.1016/S0140-6736(22)01846-3](https://doi.org/10.1016/S0140-6736(22)01846-3)
+:::
+
+::: {.publication}
+3. **Бурлов Н. Н.**, Хрыков Г. Н., Алексеев С. М. Доказательная медицина сегодня - преимущества и недостатки. *Вопросы онкологии*. 2022;68(5):571-575. [https://doi.org/10.37469/0507-3758-2022-68-5-571-575](https://doi.org/10.37469/0507-3758-2022-68-5-571-575)
+:::
+
+::: {.publication}
+4. **Бурлов Н. Н.**, Хрыков Г. Н., Бурлова Е. А., Шостка К. Г. Прогнозирование тяжелых послеоперационных осложнений в хирургии поджелудочной железы с помощью шкалы PREPARE: одноцентровое наблюдательное исследование. *Анналы хирургической гепатологии*. 2022;27(3):68-73. [https://doi.org/10.16931/1995-5464.2022-3-68-73](https://doi.org/10.16931/1995-5464.2022-3-68-73)
+:::
+
+::: {.publication}
+5. REACCT Collaborative. Post-Operative Functional Outcomes in Early Age Onset Rectal Cancer. *Frontiers in Oncology*. 2022;12:868359. [https://doi.org/10.3389/fonc.2022.868359](https://doi.org/10.3389/fonc.2022.868359)
+:::
+
+::: {.publication}
+6. REACCT Collaborative. Impact of microsatellite status in early-onset colonic cancer. *British Journal of Surgery*. 2022;109(7):632-636. [https://doi.org/10.1093/bjs/znac108](https://doi.org/10.1093/bjs/znac108)
+:::
+
+::: {.publication}
+7. REACCT Collaborative. Microsatellite instability in young patients with rectal cancer: molecular findings and treatment response. *British Journal of Surgery*. 2022;109(3):251-255. [https://doi.org/10.1093/bjs/znab437](https://doi.org/10.1093/bjs/znab437)
+:::
+
+::: {.publication}
+8. Лемещенко А. В., **Бурлов Н. Н.**, Гурская О. Е., Спивак И. М., Жекалов А. Н. Полиморфные варианты гена BDNF (rs6265) и их ассоциация с выраженностью когнитивных дисфункций у военнослужащих. *Вестник СурГУ. Медицина*. 2022;(4):54-60. [https://doi.org/10.34822/2304-9448-2022-4-54-60](https://doi.org/10.34822/2304-9448-2022-4-54-60)
+:::
+
+::: {.publication}
+9. COVIDSurg Collaborative; GlobalSurg Collaborative. SARS-CoV-2 infection and venous thromboembolism after surgery: an international prospective cohort study. *Anaesthesia*. 2022;77(1):28-39. [https://doi.org/10.1111/anae.15563](https://doi.org/10.1111/anae.15563)
+:::
+
+## 2021
+
+::: {.publication}
+1. BJS Commission Team. BJS commission on surgery and perioperative care post-COVID-19. *British Journal of Surgery*. 2021;108(10):1162-1180. [https://doi.org/10.1093/bjs/znab307](https://doi.org/10.1093/bjs/znab307)
+:::
+
+::: {.publication}
+2. COVIDSurg Collaborative; GlobalSurg Collaborative. Effects of pre-operative isolation on postoperative pulmonary complications after elective surgery: an international prospective cohort study. *Anaesthesia*. 2021;76(11):1454-1464. [https://doi.org/10.1111/anae.15560](https://doi.org/10.1111/anae.15560)
+:::
+
+::: {.publication}
+3. REACCT Collaborative. Characteristics of Early-Onset vs Late-Onset Colorectal Cancer. *JAMA Surgery*. 2021;156(9):865. [https://doi.org/10.1001/jamasurg.2021.2380](https://doi.org/10.1001/jamasurg.2021.2380)
+:::
+
+::: {.publication}
+4. COVIDSurg Collaborative; GlobalSurg Collaborative. SARS-CoV-2 vaccination modelling for safe surgery to save lives: data from an international prospective cohort study. *British Journal of Surgery*. 2021;108(9):1056-1063. [https://doi.org/10.1093/bjs/znab101](https://doi.org/10.1093/bjs/znab101)
+:::
+
+::: {.publication}
+5. COVIDSurg Collaborative; GlobalSurg Collaborative. Timing of surgery following SARS-CoV-2 infection: an international prospective cohort study. *Anaesthesia*. 2021;76(6):748-758. [https://doi.org/10.1111/anae.15458](https://doi.org/10.1111/anae.15458)
+:::
+
+::: {.publication}
+6. Adamina M., Pozza G.; #ECCStGallen Scientific Committee. Abstracts presented at the 14th European Colorectal Congress (#ECCStGallen), 29.11.2020-2.12.2020, St. Gallen, Switzerland. *Techniques in Coloproctology*. 2021;25(5):607-656. [https://doi.org/10.1007/s10151-021-02408-9](https://doi.org/10.1007/s10151-021-02408-9)
+:::
+
+## 2020
+
+::: {.publication}
+1. **Бурлов Н. Н.**, Хрыков Г. Б. С-реактивный белок как предиктор ранних послеоперационных осложнений в лечении больных колоректальным раком. Всероссийская научно-практическая студенческая конференция с международным участием «Медицинская весна - 2020»: сборник тезисов. 2020:163. [Открыть сборник](https://medspring.confreg.org/libs/files/Theses_medspring_2020_final.pdf)
+:::
+
