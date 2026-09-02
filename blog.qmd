@@ -1,5 +1,5 @@
 ---
-#title: "Блог"
+title: "Блог"
 #description: "Материалы по биостатистике, causal inference и методологии исследований"
 page-layout: full
 toc: true
