@@ -1,5 +1,5 @@
 ---
-title: false
+#title: false
 pagetitle: "Услуги"
 description: "Статистический анализ и методологическое сопровождение медицинских исследований"
 toc: true
