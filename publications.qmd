@@ -1,5 +1,6 @@
 ---
-title: "Публикации"
+title: false
+pagetitle: "Публикации"
 #description: "Научные публикации Никиты Бурлова"
 toc: false
 ---

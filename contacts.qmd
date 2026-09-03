@@ -1,5 +1,6 @@
 ---
-title: "Контакты"
+title: false
+pagetitle: "Контакты"
 #description: "Контакты и социальные сети Никиты Бурлова"
 toc: false
 ---

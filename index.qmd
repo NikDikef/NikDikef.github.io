@@ -1,5 +1,6 @@
 ---
-title: "Обо мне"
+title: false
+pagetitle: "Обо мне"
 #description: "Никита Бурлов — биостатистика и методология медицинских исследований"
 image: assets/profile.png
 page-layout: full
