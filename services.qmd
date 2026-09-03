@@ -36,24 +36,49 @@ toc: true
 
 ## Оставить отзыв
 
+```{=html}
 <form class="review-form" action="{{< var form_endpoint >}}" method="POST">
+
   <div class="form-row">
+
     <div class="form-field">
-      <label for="full-name">ФИО <span class="optional">необязательно</span></label>
-      <input id="full-name" name="ФИО" type="text" autocomplete="name" placeholder="Как к вам обращаться">
+      <label for="full-name">
+        ФИО <span class="optional">необязательно</span>
+      </label>
+      <input id="full-name" name="ФИО" type="text">
     </div>
+
     <div class="form-field">
-      <label for="institution">ЛПУ <span class="optional">необязательно</span></label>
-      <input id="institution" name="ЛПУ" type="text" autocomplete="organization" placeholder="Организация">
+      <label for="institution">
+        ЛПУ <span class="optional">необязательно</span>
+      </label>
+      <input id="institution" name="ЛПУ" type="text">
     </div>
+
   </div>
+
   <div class="form-field">
     <label for="review">Отзыв</label>
-    <textarea id="review" name="Отзыв" rows="6" required placeholder="Расскажите о совместной работе"></textarea>
+    <textarea
+      id="review"
+      name="Отзыв"
+      rows="6"
+      required
+      placeholder="Расскажите о совместной работе"></textarea>
   </div>
-  <input type="hidden" name="_subject" value="Новый отзыв с сайта Никиты Бурлова">
-  <button class="btn btn-primary" type="submit">Отправить отзыв</button>
-  <p class="form-note">Нажимая кнопку, вы передаёте введённые данные владельцу сайта через сервис Formspree.</p>
+
+  <input
+    type="hidden"
+    name="_subject"
+    value="Новый отзыв с сайта Никиты Бурлова">
+
+  <button class="btn btn-primary" type="submit">
+    Отправить отзыв
+  </button>
+
+  <p class="form-note">
+    Нажимая кнопку, вы передаёте введённые данные владельцу сайта через сервис Formspree.
+  </p>
+
 </form>
-
-
+```
