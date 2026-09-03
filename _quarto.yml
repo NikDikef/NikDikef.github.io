@@ -10,7 +10,7 @@ project:
 lang: ru
 
 website:
-  site-url: "https://nikdikef.github.io/Ebm_base.github.io/"
+  site-url: "https://nikdikef.github.io/"
   favicon: assets/stack.png
   open-graph: true
   twitter-card: true
