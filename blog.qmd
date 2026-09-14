@@ -12,6 +12,14 @@ listing:
     contents:
       - "posts/2026*/*.qmd"
       - "!outputs/**"
+  - id: posts-2025
+    contents:
+      - "posts/2025*/*.qmd"
+      - "!outputs/**"
+  - id: posts-2022
+    contents:
+      - "posts/2022*/*.qmd"
+      - "!outputs/**"
     type: custom
     template: templates/blog-listing.ejs
     sort: "date desc"
