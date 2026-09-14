@@ -11,9 +11,7 @@ date: 2026-08-13
 date-format: "DD.MM.YYYY"
 
 categories:
-  - биостатистика
   - публикация
-  - R
   - журнальный клуб
   - journal club
 

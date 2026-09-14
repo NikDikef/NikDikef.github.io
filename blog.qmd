@@ -1,12 +1,11 @@
 ---
-title: false
+#title: false
 pagetitle: "Блог"
 page-layout: full
 toc: true
 toc-title: "Годы"
 toc-location: right
 date-format: "DD.MM.YYYY"
-
 listing:
   - id: posts-2026
     contents:
@@ -18,7 +17,6 @@ listing:
     filter-ui: false
     categories: true
     feed: true
-
   - id: posts-2025
     contents:
       - "posts/2025*/*.qmd"
@@ -27,7 +25,6 @@ listing:
     template: templates/blog-listing.ejs
     sort: "date desc"
     filter-ui: false
-
   - id: posts-2022
     contents:
       - "posts/2022*/*.qmd"
