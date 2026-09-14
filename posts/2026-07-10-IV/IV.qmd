@@ -13,8 +13,8 @@ date-format: "DD.MM.YYYY"
 categories:
   - биостатистика
   - методология
-  - R
-  - instrumantal variable
+  - causal inference
+  - instrumental variable
 
 image: fig-1.png
 
